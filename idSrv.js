@@ -1,13 +1,18 @@
 var http = require('http');
 var url = require('url');
 var express = require('express');
+var fs = require('fs');
 var MongoClient = require('mongodb').MongoClient;
+var ObjectID = require('mongodb').ObjectID;
+var countID = new ObjectID.createFromHexString("54f41d303fae2d2407a556b6");
 var app=express();
 
-var usePort = 9527;
-var MongoAccount='',MongoPasswd='';//TODO passwd should get frome file!
-var idCnt = 0;//TODO get from file or DB
+var usePort = 1119;
+var MongoAccount,MongoPasswd,MongoUrl;
+var idCnt = 0;
 var db;
+
+var debug = false;
 
 var server = http.createServer(app);
 //app.set('jsonp callback name');
@@ -28,21 +33,27 @@ app.get('/id/get/',function(request, response){
 						});
 				request.on('end', function () {
 						});
-				console.log((new Date()) + " ip: "+src_ip + ' normal get request: '+JSON.stringify(queryData) );
+				if(debug)console.log((new Date()) + " ip: "+src_ip + ' normal get request: '+JSON.stringify(queryData) );
 				//console.log(JSON.stringify(request.url) );
 						//response.setHeader('Content-Type', 'application/json');
 				response.writeHead(200);
-				count = (queryData)?(queryData.count||1):1;
+				count = (queryData)?( parseInt(queryData.count) ||1):1;//TODO must positive
+				if(count<=0 && !debug){
+						response.write("fail parameter");
+						response.end();
+						return;
+
+				}
 				sendString = '{"status":"OK","start":'+idCnt+',"count":'+count+'}';
 
-				db.collection("idCount").update({},{count:(idCnt + parseInt(count) )},{safe:false},function(err,data){
+				db.collection("idCount").update({},{$inc: {count:count} },{safe:false},function(err,data){
 								if (err){
 										console.log(err);
 										response.write('{"status":"fail"}');
 										response.end();
 
 								}else{
-									idCnt+= parseInt(count,10);
+									idCnt+= count;
 									response.write(sendString);
 									response.end();
 								}
@@ -51,21 +62,59 @@ app.get('/id/get/',function(request, response){
 
 
 });
-MongoClient.connect("mongodb://140.123.4.160:5005/idAssign", function(err, database) {
-				if(err) throw err;
+fs.readFile('./mongoInfo.priv',function(err,data){
+			if(err){
+				console.log("read mongoInfo error"+JSON.stringify(err));
+				process.exit(2);
+			}
+			try{
+					data = JSON.parse(data);
+			}catch(e){
+					console.log("parse mongoInfo fail: " + JSON.stringify(e) );
+					process.exit(2);
+			}
+
+			if(!data.account || !data.passwd || !data.url){
+					console.log("mongoInfo not enough info: " + JSON.stringify(data) ) ;
+					process.exit(2);
+			}
+			MongoAccount = data.account;
+			MongoPasswd = data.passwd;
+			MongoUrl= data.url;
+			
+			MongoClient.connect(MongoUrl, function(err, database) {
+				if(err){
+						console.log("mongo connect error! "+JSON.stringify(err));
+						process.exit(1);
+				}
 
 				db = database;
+						
 
-				// Start the application after the database connection is ready
-				db.authenticate(MongoAccount, MongoPasswd, function(err, result) {
-						if(!result){
-								console.log("mongo auth fail");
-								process.exit(1);
-						}
-						console.log("auth result : " + result);
-						server.listen(usePort, function() {
-								console.log((new Date()) + 'run on port:' + usePort);
-						});
+					// Start the application after the database connection is ready
+					db.authenticate(MongoAccount, MongoPasswd, function(err, result) {
+							if(!result){
+									console.log("mongo auth fail");
+									process.exit(1);
+							}
+							if(debug)console.log("auth result : " + result);
+	
+							db.collection("idCount").findOne({_id:countID},function(err,data){
+									if(err){
+											console.log(JSON.stringify(err));
+											process.exit(1);
+									}
+									if(data.count == undefined){
+											console.log("error at mongo connect: data.count UNDEFINED");
+											process.exit(1);
+									}
+									if(debug)console.log(JSON.stringify(data));
+									idCnt = data.count ;
+									server.listen(usePort, function() {
+											console.log((new Date()) + 'run on port:' + usePort);
+											});
+							});
+					});
 				});
 });
 
