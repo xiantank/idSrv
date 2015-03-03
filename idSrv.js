@@ -40,7 +40,7 @@ app.get('/id/get/json/',function(request, response){
 				//console.log(JSON.stringify(request.url) );
 						//response.setHeader('Content-Type', 'application/json');
 				response.writeHead(200);
-				count = (queryData)?( parseInt(queryData.count) ||1):1;//TODO must positive
+				count = (queryData)?( parseInt(queryData.count) ||1):1;
 				if(count<=0 && !debug){
 						response.write("fail parameter");
 						response.end();
@@ -79,7 +79,7 @@ app.get('/id/get/number/',function(request, response){
 				//console.log(JSON.stringify(request.url) );
 						//response.setHeader('Content-Type', 'application/json');
 				response.writeHead(200);
-				count = (queryData)?( parseInt(queryData.count) ||1):1;//TODO must positive
+				count = (queryData)?( parseInt(queryData.count) ||1):1;
 				if(count<=0 && !debug){
 						response.write("fail parameter");
 						response.end();
