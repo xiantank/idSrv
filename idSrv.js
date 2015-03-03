@@ -13,14 +13,14 @@ var idCnt = 0;
 var db;
 
 var debug = false;
+//var debug = true;
 
 var server = http.createServer(app);
 //app.set('jsonp callback name');
 //app.use(bodyParser.json());
 //app.set('jsonp callback name');
 //app.use();
-app.get('/id/get/',function(request, response){
-				src_ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+app.get('/id/get/json/',function(request, response){
 				queryData=url.parse(request.url,true).query;
 				var body = '';
 				var sendString = '';
@@ -33,7 +33,10 @@ app.get('/id/get/',function(request, response){
 						});
 				request.on('end', function () {
 						});
-				if(debug)console.log((new Date()) + " ip: "+src_ip + ' normal get request: '+JSON.stringify(queryData) );
+				if(debug){
+					src_ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+					console.log((new Date()) + " ip: "+src_ip + ' get request: '+JSON.stringify(queryData) );
+				}
 				//console.log(JSON.stringify(request.url) );
 						//response.setHeader('Content-Type', 'application/json');
 				response.writeHead(200);
@@ -55,6 +58,45 @@ app.get('/id/get/',function(request, response){
 								}else{
 									idCnt+= count;
 									response.write(sendString);
+									response.end();
+								}
+				});
+
+
+
+});
+
+app.get('/id/get/',function(request, response){
+				queryData=url.parse(request.url,true).query;
+				var sendString = '';
+				var count = 0 ;
+				request.on('end', function () {
+						});
+				if(debug){
+					src_ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+					console.log((new Date()) + " ip: "+src_ip + ' get request: '+JSON.stringify(queryData) );
+				}
+				//console.log(JSON.stringify(request.url) );
+						//response.setHeader('Content-Type', 'application/json');
+				response.writeHead(200);
+				count = (queryData)?( parseInt(queryData.count) ||1):1;//TODO must positive
+				if(count<=0 && !debug){
+						response.write("fail parameter");
+						response.end();
+						return;
+
+				}
+				sendString = idCnt;
+
+				db.collection("idCount").update({},{$inc: {count:count} },{safe:false},function(err,data){
+								if (err){
+										console.log(err);
+										response.write('db error(5)');
+										response.end();
+
+								}else{
+									idCnt+= count;
+									response.write(sendString+"");
 									response.end();
 								}
 				});
