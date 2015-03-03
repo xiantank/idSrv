@@ -66,7 +66,7 @@ app.get('/id/get/json/',function(request, response){
 
 });
 
-app.get('/id/get/',function(request, response){
+app.get('/id/get/number/',function(request, response){
 				queryData=url.parse(request.url,true).query;
 				var sendString = '';
 				var count = 0 ;
