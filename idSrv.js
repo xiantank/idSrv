@@ -12,8 +12,21 @@ var MongoAccount,MongoPasswd,MongoUrl;
 var idCnt = 0;
 var db;
 
+var doclose = false;
 var debug = false;
 //var debug = true;
+var serverClose = function(){
+		doclose=true;
+		fs.appendFile('IDSrv.log',(new Date())+ '\nsrv id: '+idCnt+'  ; ', function (err) {
+				db.collection("idCount").findOne({_id:countID},function(err,data){
+						fs.appendFile('IDSrv.log', 'inDB id: '+JSON.stringify(data)+'\n', function (err) {
+								console.log('idSrv closing');
+								process.exit(0);
+						});
+				});
+		});
+};
+
 
 var server = http.createServer(app);
 //app.set('jsonp callback name');
@@ -21,6 +34,11 @@ var server = http.createServer(app);
 //app.set('jsonp callback name');
 //app.use();
 app.get('/id/get/json/',function(request, response){
+		if(doclose==true){
+				response.write("idSrv is closing");
+				response.end();
+				return;
+		}
 				queryData=url.parse(request.url,true).query;
 				var body = '';
 				var sendString = '';
@@ -67,6 +85,11 @@ app.get('/id/get/json/',function(request, response){
 });
 
 app.get('/id/get/number/',function(request, response){
+		if(doclose==true){
+				response.write("idSrv is closing");
+				response.end();
+				return;
+		}
 				queryData=url.parse(request.url,true).query;
 				var sendString = '';
 				var count = 0 ;
@@ -159,4 +182,11 @@ fs.readFile('./mongoInfo.priv',function(err,data){
 					});
 				});
 });
+process.on('SIGINT', function () {
+		serverClose();
 
+});
+process.on('SIGTERM', function () {
+		serverClose();
+
+});
