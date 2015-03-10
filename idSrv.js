@@ -35,7 +35,7 @@ var server = http.createServer(app);
 //app.use();
 app.get('/id/get/json/',function(request, response){
 		if(doclose==true){
-				response.write("idSrv is closing");
+				response.write('{"status":"fail","reason":"idSrv is closing."}');
 				response.end();
 				return;
 		}
