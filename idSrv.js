@@ -60,7 +60,7 @@ app.get('/id/get/json/',function(request, response){
 				response.writeHead(200);
 				count = (queryData)?( parseInt(queryData.count) ||1):1;
 				if(count<=0 && !debug){
-						response.write("fail parameter");
+						response.write('{"status":"fail","reason":"fail parameter"}');
 						response.end();
 						return;
 
@@ -70,7 +70,7 @@ app.get('/id/get/json/',function(request, response){
 				db.collection("idCount").update({},{$inc: {count:count} },{safe:false},function(err,data){
 								if (err){
 										console.log(err);
-										response.write('{"status":"fail"}');
+										response.write('{"status":"fail","reason":"db error(5)""}');
 										response.end();
 
 								}else{
