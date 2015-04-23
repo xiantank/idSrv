@@ -109,7 +109,7 @@ app.get('/id/get/number/',function(request, response){
 						return;
 
 				}
-				sendString = idCnt;
+				sendString = ++idCnt;
 
 				db.collection("idCount").update({},{$inc: {count:count} },{safe:false},function(err,data){
 								if (err){
@@ -118,7 +118,6 @@ app.get('/id/get/number/',function(request, response){
 										response.end();
 
 								}else{
-									idCnt+= count;
 									response.write(sendString+"");
 									response.end();
 								}
