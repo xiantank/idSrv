@@ -7,7 +7,7 @@ var ObjectID = require('mongodb').ObjectID;
 var countID = new ObjectID.createFromHexString("54f41d303fae2d2407a556b6");
 var app=express();
 
-var usePort = 1119;
+var usePort = 8324;
 var MongoAccount,MongoPasswd,MongoUrl;
 var idCnt = 0;
 var db;
